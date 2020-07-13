@@ -1,31 +1,58 @@
 document.addEventListener('DOMContentLoaded', () => {
     const dogBar = document.getElementById('dog-bar')
     const dogInfoDiv = document.getElementById('dog-info')
-    
+    const filterButton = document.getElementById('good-dog-filter')
+    let goodDogFilter = false
+
+    function filterGoodDogs(dogs) {
+        const goodDogs = dogs.filter(dog => {
+            return dog.isGoodDog
+        })
+        return goodDogs
+    }
+
+    function enableFilterButton() {
+        filterButton.addEventListener('click', () => {
+            dogBar.innerHTML = ""
+            fetch('http://localhost:3000/pups')
+                .then(res => res.json())
+                .then(dogs => {
+                    goodDogFilter = !goodDogFilter
+                    if (goodDogFilter) {
+                        filterButton.innerText = "Filter good dogs: ON"
+                        loadDogs(filterGoodDogs(dogs))
+                    } else {
+                        filterButton.innerText = "Filter good dogs: OFF"
+                        loadDogs(dogs)
+                    }
+                })
+        })
+    }
+
     function toggleGoodDog(dog) {
         // debugger
         const newValue = !dog.isGoodDog
         fetch(`http://localhost:3000/pups/${dog.id}`, {
             method: 'PATCH',
             headers: {
-                "Content-Type" : "application/json",
-                "Accept" : "application/json"
+                "Content-Type": "application/json",
+                "Accept": "application/json"
             },
             body: JSON.stringify({
                 isGoodDog: newValue
             })
         })
-        .then(res => res.json())
-        .then(displayDog)
+            .then(res => res.json())
+            .then(displayDog)
         // debugger
     }
-    
+
     function goodDogButton(dog) {
         const button = document.createElement('button')
-        button.addEventListener('click', () => {toggleGoodDog(dog)})
+        button.addEventListener('click', () => { toggleGoodDog(dog) })
         return button
     }
-    
+
     function displayDog(dog) {
         dogInfoDiv.innerHTML = ""
         const img = document.createElement('img')
@@ -36,23 +63,24 @@ document.addEventListener('DOMContentLoaded', () => {
         button.innerText = dog.isGoodDog ? "Good Dog!" : "Bad Dog!"
         dogInfoDiv.append(img, h2, button)
     }
-    
+
     function dogSpan(dog) {
         const dogSpan = document.createElement('span')
         dogSpan.innerText = dog.name
         dogBar.append(dogSpan)
-        dogSpan.addEventListener('click', () => {displayDog(dog)})
+        dogSpan.addEventListener('click', () => { displayDog(dog) })
     }
-    
+
     function loadDogs(dogs) {
         dogs.forEach(dog => dogSpan(dog))
     }
-    
+
     function dogFetch() {
         fetch('http://localhost:3000/pups')
-        .then(res => res.json())
-        .then(dogs => loadDogs(dogs))
+            .then(res => res.json())
+            .then(dogs => loadDogs(dogs))
     }
-    
+
     dogFetch()
+    enableFilterButton()
 })
